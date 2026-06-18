@@ -1,0 +1,546 @@
+/* ============================================================
+   THE WORD COMMONS — minimal modern UI + abstract bitmap field
+   ============================================================ */
+
+@font-face {
+  font-family: 'NotoSansKR';
+  src: url('/assets/fonts/NotoSansKR-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MiraeroNormal';
+  src: url('/assets/fonts/MiraeroNormal.ttf') format('truetype');
+  font-weight: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg-0: #f7f7f4;
+  --bg-1: #efefed;
+  --bg-2: #e5e7eb;
+  --bg-3: #f8f8f6;
+
+  --panel-strong: rgba(255, 255, 255, 0.82);
+  --panel-soft: rgba(245, 245, 245, 0.9);
+
+  --border-0: #d4d4d8;
+  --border-1: #c7cbd1;
+  --border-2: #e5e7eb;
+
+  --text-0: #1f2933;
+  --text-1: #3a4350;
+  --text-2: #6b7280;
+
+  --mneme: #2dd4bf;
+  --dolon: #a855f7;
+  --demos: #f59e0b;
+  --mneme-ink: #0c6b63;
+  --dolon-ink: #6b21c8;
+  --demos-ink: #a25406;
+
+  --agora-0: #d1d5db;
+  --agora-1: #bfc5cc;
+  --agora-2: #9ca3af;
+  --field-0: #ede9e3;
+  --field-1: #e8e1d8;
+  --field-2: #f1eeea;
+
+  /* ── themeable tokens (light defaults) — 분쟁 시 .is-conflict-mode에서 반전 ── */
+  --app-bg: #f7f7f4;
+  --panel-bg: rgba(255, 255, 255, 0.58);
+  --panel-border: rgba(255, 255, 255, 0.4);
+  --input-bg: rgba(255, 255, 255, 0.5);
+  --input-border: rgba(255, 255, 255, 0.45);
+  --btn-bg: rgba(255, 255, 255, 0.5);
+  --btn-bg-hover: rgba(255, 255, 255, 0.72);
+  --map-bg: #fafafa;
+  --map-dot: rgba(31, 41, 51, 0.07);
+  --map-grid: rgba(31, 41, 51, 0.04);
+  --map-border: var(--border-1);
+  --wall-veil: linear-gradient(rgba(247, 247, 244, 0.32), rgba(238, 238, 237, 0.44));
+
+  --radius: 0px; /* 직각 기반 — 건축적/시스템적 레이아웃 */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  font-family: 'NotoSansKR', ui-sans-serif, system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  color: var(--text-0);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 880px;
+  min-height: 100vh;
+  background-color: var(--app-bg);
+  transition: background-color 500ms ease;
+}
+
+/* 인쇄 그레인 (최상단, 입자감) */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: var(--grain);
+}
+
+/* 테마 변수의 스코프 루트 */
+.app-root {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* wallpaper는 별도 레이어 — 분쟁 모드에서 이 레이어만 어두워진다 (UI는 영향 없음) */
+.wallpaper-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url('/assets/wallpapers/wallpaper.png') center / cover no-repeat;
+  transition: filter 600ms ease;
+}
+.app-root.is-conflict-mode .wallpaper-layer {
+  filter: brightness(0.4) contrast(1.12) saturate(0.85);
+}
+/* 가독성용 베일 — UI 패널보다 항상 아래 */
+.wallpaper-veil {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--wall-veil);
+  transition: background 600ms ease;
+}
+
+/* ── conflict-night theme — overlay가 아니라 변수 반전으로 다크모드 전환 ── */
+.app-root.is-conflict-mode {
+  --app-bg: #0d1117;
+  --text-0: #f3f4f6;
+  --text-1: #cbd5e1;
+  --text-2: #94a3b8;
+
+  --panel-bg: rgba(15, 23, 42, 0.86);
+  --panel-border: rgba(255, 255, 255, 0.18);
+  --input-bg: rgba(15, 23, 42, 0.72);
+  --input-border: rgba(255, 255, 255, 0.18);
+  --btn-bg: rgba(15, 23, 42, 0.72);
+  --btn-bg-hover: rgba(30, 41, 59, 0.88);
+
+  --map-bg: #111827;
+  --map-dot: rgba(255, 255, 255, 0.1);
+  --map-grid: rgba(255, 255, 255, 0.07);
+  --map-border: rgba(255, 255, 255, 0.18);
+
+  --wall-veil: linear-gradient(rgba(8, 10, 20, 0.42), rgba(6, 8, 18, 0.5));
+
+  /* 어두운 패널에서 읽히도록 에이전트 잉크를 밝게 */
+  --mneme-ink: #5eead4;
+  --dolon-ink: #c4b5fd;
+  --demos-ink: #fdba74;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+/* frosted glass — 배경만 흐릴 뿐 패널 내부 글자는 또렷하다. 테마 변수로 낮/밤 전환 */
+.panel {
+  background: var(--panel-bg);
+  color: var(--text-0);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 16px 44px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(20px) saturate(1.15);
+  -webkit-backdrop-filter: blur(20px) saturate(1.15);
+  transition: background-color 500ms ease, border-color 500ms ease, color 500ms ease;
+}
+
+/* ============================================================
+   TOP — Offering Archive (the only parchment, scrolls internally)
+   ============================================================ */
+.offering-archive {
+  position: relative;
+  height: clamp(190px, 25vh, 290px);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 26px 10px;
+  overflow: hidden;
+}
+
+.offering-archive__head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-1);
+  flex: 0 0 auto;
+}
+.offering-archive__title {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--text-0);
+}
+.offering-archive__subtitle {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--text-2);
+}
+
+.offering-archive__feed {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 16px 6px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.story-block {
+  position: relative;
+  padding-left: 20px;
+  border-left: 4px solid var(--accent, var(--border-1));
+}
+.story-block::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 4px;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--accent, var(--border-1));
+  transform: rotate(45deg);
+  box-shadow: 0 0 12px 1px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.story-block__text {
+  font-family: 'MiraeroNormal', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
+  font-size: 22px;
+  line-height: 2.05;
+  color: var(--accent-ink, var(--text-0));
+}
+.story-block.agent-mneme { --accent: var(--mneme); --accent-ink: var(--mneme-ink); }
+.story-block.agent-dolon { --accent: var(--dolon); --accent-ink: var(--dolon-ink); }
+.story-block.agent-demos { --accent: var(--demos); --accent-ink: var(--demos-ink); }
+
+.story-empty {
+  font-family: 'MiraeroNormal', serif;
+  font-size: 21px;
+  line-height: 1.95;
+  color: var(--text-1);
+}
+
+.caret {
+  display: inline-block;
+  width: 0.5ch;
+  animation: blink 1s steps(2, start) infinite;
+  color: var(--accent, var(--text-2));
+}
+@keyframes blink { to { opacity: 0; } }
+
+.fade-in { animation: fadeIn 360ms ease both; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   MIDDLE — world map (full width, no side log)
+   ============================================================ */
+/* 맵 래퍼 — 평소엔 맵 한 칸, conflict 시 [맵 | 오른쪽 토론패널] 2칸 grid */
+.map-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+.app-root.is-conflict-mode .map-wrap {
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 14px;
+}
+@media (max-width: 960px) {
+  .app-root.is-conflict-mode .map-wrap {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 10px;
+  }
+}
+
+/* 중앙 맵 = 완전 불투명한 시뮬레이션 보드. wallpaper가 비치지 않는다. */
+.world-map {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 0;
+  border: 1px solid var(--map-border);
+  overflow: hidden;
+  /* 불투명 보드 — 낮: 흰 단어밭 / 밤: 차콜 보드. opacity가 아니라 색으로 전환. 도트 유지. */
+  background-color: var(--map-bg);
+  background-image: radial-gradient(circle at center, var(--map-dot) 1px, transparent 1.7px);
+  background-size: 10px 10px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.18), inset 0 0 80px rgba(0, 0, 0, 0.04);
+  transition: background-color 500ms ease, border-color 500ms ease;
+}
+/* faint bitmap grid, faded out toward the centre (agora) */
+.world-map::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--map-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--map-grid) 1px, transparent 1px);
+  background-size: 30px 30px;
+  -webkit-mask: radial-gradient(circle at center, transparent 22%, #000 68%);
+  mask: radial-gradient(circle at center, transparent 22%, #000 68%);
+}
+/* print grain over the whole field (above canvas) */
+.world-map::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.06;
+  mix-blend-mode: soft-light;
+  background-image: var(--grain);
+}
+/* 에이전트 본체(캔버스)는 어떤 모드에서도 filter/opacity/blend로 변형되지 않는다. */
+.world-map canvas {
+  position: relative;
+  z-index: 2;
+  filter: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+.app-root.is-conflict-mode .world-map,
+.app-root.is-conflict-mode .world-map canvas {
+  filter: none;
+  opacity: 1;
+}
+
+/* ============================================================
+   Bottom — word input bar (input + icon buttons)
+   ============================================================ */
+.input-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.input-bar input {
+  flex: 1;
+  padding: 16px 20px;
+  border-radius: 0;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--text-0);
+  font-family: inherit;
+  font-size: 19px;
+  letter-spacing: 0.01em;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.input-bar input::placeholder { color: var(--text-2); }
+.input-bar input:focus {
+  border-color: var(--agora-2);
+  box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.18);
+}
+
+.icon-btn {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 0;
+  border: 1px solid var(--input-border);
+  background: var(--btn-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-1);
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 120ms ease, color 160ms ease;
+}
+.icon-btn svg { width: 24px; height: 24px; }
+.icon-btn:hover { background: var(--btn-bg-hover); border-color: var(--panel-border); color: var(--text-0); }
+.icon-btn:active { transform: translateY(1px); }
+.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.icon-btn[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: #11151c;
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  border-radius: 0;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+.icon-btn[data-tip]:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* 봉헌 시작 — subtly special */
+.icon-btn--offering {
+  overflow: hidden;
+  border-color: transparent;
+  color: var(--text-0);
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.22), rgba(168, 85, 247, 0.2) 50%, rgba(245, 158, 11, 0.22));
+  box-shadow: 0 2px 16px rgba(168, 85, 247, 0.16);
+}
+.icon-btn--offering::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  background-image: var(--grain);
+}
+.icon-btn--offering:hover { filter: brightness(1.04) saturate(1.06); }
+
+/* ============================================================
+   Discussion side panel — 단어 광장의 토론 기록 메신저 (양피지 문서 톤)
+   conflict 시 맵 오른쪽 세로 컬럼. 중앙 AGORA는 가리지 않는다.
+   ============================================================ */
+.discussion-side-panel {
+  --ink: #3a3026;
+  --ink-soft: #6f6151;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 14px;
+  border-radius: 0;
+  /* 바랜 양피지/아이보리 — 어두운 카드 UI가 아니라 차분한 종이 */
+  background:
+    linear-gradient(rgba(244, 238, 223, 0.5), rgba(232, 225, 206, 0.5)),
+    rgba(238, 232, 216, 0.95);
+  border: 1px solid rgba(120, 100, 70, 0.32);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+  color: var(--ink);
+  animation: panelIn 320ms ease both;
+}
+@keyframes panelIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ── header — 메신저 헤더 ── */
+.discussion__head {
+  flex: 0 0 auto;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(120, 100, 70, 0.28);
+}
+.discussion__titlerow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.discussion__title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+}
+.discussion__word {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+.discussion__status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 9px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+.discussion__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b06a4a;
+  animation: statusPulse 1.4s ease-in-out infinite;
+}
+@keyframes statusPulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.discussion__contenders {
+  margin-top: 6px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+
+/* ── messages — 직각 카드형 메시지 블록 ── */
+.discussion__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.msg {
+  padding: 10px 12px 11px;
+  background: rgba(255, 253, 246, 0.66);
+  border: 1px solid rgba(120, 100, 70, 0.18);
+  border-left: 3px solid var(--c, #999);
+}
+.msg__name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--c, var(--ink-soft));
+  margin-bottom: 5px;
+}
+.msg__text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.72;
+  color: var(--ink);
+}
+
+/* ── system message — 투표 결과 ── */
+.sys-msg {
+  align-self: center;
+  max-width: 92%;
+  margin: 2px 0;
+  padding: 7px 12px;
+  text-align: center;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  background: rgba(120, 100, 70, 0.07);
+  border: 1px dashed rgba(120, 100, 70, 0.4);
+}
+
+/* ── thin, calm scrollbar ── */
+.discussion-side-panel::-webkit-scrollbar { width: 6px; }
+.discussion-side-panel::-webkit-scrollbar-thumb { background: rgba(120, 100, 70, 0.35); }
+.discussion-side-panel::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- scrollbars ---------- */
+.offering-archive__feed::-webkit-scrollbar { width: 9px; }
+.offering-archive__feed::-webkit-scrollbar-thumb { background: var(--border-1); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+.offering-archive__feed::-webkit-scrollbar-track { background: transparent; }

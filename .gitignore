@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+dist-ssr/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# editor / OS
+.DS_Store
+*.local
+.vscode/
+.idea/
+
+# Claude Code local session/config
+.claude/
+
+# misc caches
+.cache/
+*.tsbuildinfo

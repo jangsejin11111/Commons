@@ -1,0 +1,25 @@
+{
+  "name": "the-word-commons",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "vite": "^8.0.0",
+    "typescript": "^5.9.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "phaser": "^3.86.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  }
+}
