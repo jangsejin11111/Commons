@@ -51,14 +51,30 @@ export function buildVotePrompt(input: VoteInput) {
   ].join('\n');
 }
 
+const ROLE_TASK: Record<string, string> = {
+  mneme:
+    '이 단어가 오래전부터 세계에 있었던 것처럼, 그 단어가 깃든 장소·사물·금기·이름의 기원 장면을 써라.',
+  dolon:
+    '앞 문단의 장소·사물·이름을 그대로 이어받아, 누군가 그 말을 훔치거나 비틀어 뜻이 변해버린 밤의 사건을 써라.',
+  demos:
+    '앞 문단에서 변해버린 그 말이 한 사람에서 군중으로, 후렴·소문·의례가 되어 퍼지는 장면을 반복과 리듬으로 써라.'
+};
+
 export function buildOfferingPrompt(input: OfferingInput) {
-  const focusWord = input.inventory[0];
+  const focusWord = input.focusWord ?? input.inventory[0];
   return [
     buildAgentHeader(input.agentId),
     buildKnowledgeContext(input.agentId, focusWord),
-    `현재 봉헌글:\n${input.currentStory || '아직 없음'}`,
-    `직전 작성자: ${input.previousAgentId ?? '없음(첫 문단)'}`,
-    `너의 보유 단어: ${input.inventory.join(', ') || '없음'}`,
-    '너의 지식과 문체를 살려 2~5문장으로 다음 문단을 이어 써라.'
+    `[모드] story_continuation — 너는 하나의 신화/전승을 이어 쓰는 중이다.`,
+    `[이 라운드의 씨앗 단어] ${focusWord ?? '(없음)'}`,
+    `[지금까지의 이야기]\n${input.currentStory || '(아직 첫 문단)'}`,
+    `[너의 차례 과제] ${ROLE_TASK[input.agentId] ?? ''}`,
+    [
+      '규칙:',
+      "- 앞 문단의 장소·사물·반복어를 반드시 이어받아 다음 '장면'을 쓴다.",
+      '- 본문에 에이전트 이름이나 역할 설명을 절대 넣지 않는다(이름은 UI 라벨로만).',
+      "- '~했다(보고체)', '의미/색인/좌표/데이터/변형' 같은 메타 단어 금지.",
+      '- 사물·장소·몸짓·소리·날씨·반복되는 말로 장면을 보여준다. 2~4문장.'
+    ].join('\n')
   ].join('\n');
 }

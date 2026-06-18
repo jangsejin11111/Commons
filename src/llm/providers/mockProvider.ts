@@ -1,6 +1,6 @@
 import type { LLMProvider } from './types';
 import type { AgentId } from '../../types';
-import { getKnowledge, pickModuleForWord } from '../../data/knowledge';
+import { getKnowledge, pickModuleForWord, pickMythScene } from '../../data/knowledge';
 
 /**
  * mockProvider — 실제 LLM 없이도 각 에이전트의 knowledge 차이가 드러나도록
@@ -30,7 +30,7 @@ const lastHangulCode = (s: string): number | null => {
  * 앞 음절의 받침에 맞춰 자동으로 고른다. (mock 출력이 양피지에 그대로 노출되므로)
  */
 function resolveJosa(text: string): string {
-  return text.replace(/(을\/를|은\/는|이\/가|와\/과|과\/와|으로\/로)/g, (marker, _p, offset: number) => {
+  return text.replace(/(을\/를|은\/는|이\/가|와\/과|과\/와|으로\/로|이라\/라)/g, (marker, _p, offset: number) => {
     const code = lastHangulCode(text.slice(0, offset));
     if (code === null) return marker;
     const jong = (code - HANGUL_START) % 28;
@@ -42,6 +42,7 @@ function resolveJosa(text: string): string {
       case '와/과':
       case '과/와': return hasBatchim ? '과' : '와';
       case '으로/로': return !hasBatchim || jong === 8 /* ㄹ */ ? '로' : '으로';
+      case '이라/라': return hasBatchim ? '이라' : '라';
       default: return marker;
     }
   });
@@ -70,13 +71,15 @@ export const mockProvider: LLMProvider = {
   },
 
   async generateOfferingParagraph(input) {
-    const word = input.inventory[0] ?? '침묵';
-    const module = pickModuleForWord(input.agentId, word);
-    const tpl = module.writingPatterns[pickIndex(word, module.writingPatterns.length)];
+    // 한 라운드는 하나의 seed 단어 + 하나의 공유 장면으로, 세 에이전트가 신화를 이어 쓴다.
+    // (요약/처리보고가 아니라 세계 안의 '장면'. 본문에 에이전트 이름은 넣지 않는다.)
+    const word = input.focusWord ?? input.inventory[0] ?? '침묵';
+    const scene = pickMythScene(input.roundSeed ?? 0);
+    const tpl = scene[input.agentId]; // mneme=기원 / dolon=절도·왜곡 / demos=군중 확산
     return {
       agentId: input.agentId,
       usedWords: [word],
-      text: fill(tpl, word, input.previousAgentId)
+      text: fill(tpl, word)
     };
   }
 };

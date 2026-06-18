@@ -6,9 +6,10 @@ import { useGameStore } from '../state/useGameStore';
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
- * 릴레이 봉헌글 작성.
- * MNEME → DOLON → DEMOS 순서로 각자 한 문단씩 이어 쓴다.
- * (docs/03 Relay Offering, CLAUDE.md 완료 기준 6번)
+ * 릴레이 봉헌 신화.
+ * 한 라운드는 하나의 seed 단어와 하나의 공유 장면(motif)으로,
+ * MNEME(기원) → DOLON(절도·왜곡) → DEMOS(군중 확산) 순서로 이어 써
+ * 세 문단이 합쳐 하나의 짧은 신화처럼 읽히게 한다.
  */
 export async function runOffering() {
   const store = useGameStore.getState();
@@ -18,9 +19,16 @@ export async function runOffering() {
     return;
   }
 
+  // 이 라운드 신화의 seed 단어 + 공유 장면을 한 번만 정해 세 에이전트가 함께 쓴다.
+  const collected = store.agents.flatMap((a) => a.inventory);
+  const focusWord = collected.length
+    ? collected[Math.floor(Math.random() * collected.length)]
+    : '침묵';
+  const roundSeed = Math.floor(Math.random() * 100000);
+
   store.setOfferingInProgress(true);
   store.setPhase('OFFERING');
-  store.addLog('🕯️ 봉헌 의식이 시작됩니다. 세 에이전트가 릴레이로 글을 바칩니다.');
+  store.addLog(`🕯️ 봉헌 의식이 시작됩니다 — '${focusWord}'의 신화를 세 손이 이어 씁니다.`);
 
   for (const agentId of relayOrder) {
     const agent = useGameStore.getState().agents.find((a) => a.id === agentId);
@@ -37,7 +45,9 @@ export async function runOffering() {
       agentId,
       currentStory,
       inventory: agent.inventory,
-      previousAgentId
+      previousAgentId,
+      focusWord,
+      roundSeed
     });
 
     useGameStore.getState().addOffering({
